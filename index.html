@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>2025 年度生活与足迹年鉴</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --timeline-line: #334155;
+            --container-width: 900px;
+
+            /* 核心分类色系 */
+            --color-travel: #06b6d4;  /* 青色 */
+            --color-food: #f59e0b;    /* 橙色 */
+            --color-tech: #8b5cf6;    /* 紫色 */
+            --color-social: #ec4899;  /* 粉色 */
+            --color-default: #64748b; /* 灰色 */
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* --- Header --- */
+        header {
+            padding: 4rem 1.5rem 3rem;
+            text-align: center;
+            background: radial-gradient(circle at top, #1e293b 0%, #0f172a 100%);
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            font-weight: 800;
+            background: linear-gradient(to right, #22d3ee, #c084fc, #f472b6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle { font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 2rem; }
+
+        /* 统计卡片 */
+        .stats-container {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .stat-item {
+            text-align: center;
+            position: relative;
+        }
+
+        .stat-item::after {
+            content: '';
+            position: absolute;
+            right: -1rem;
+            top: 10%;
+            height: 80%;
+            width: 1px;
+            background: rgba(255,255,255,0.1);
+        }
+        .stat-item:last-child::after { display: none; }
+
+        .stat-num { font-size: 1.8rem; font-weight: 700; color: #fff; }
+        .stat-label { font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; }
+
+        /* --- 过滤器 (PC居中优化) --- */
+        .filter-wrapper {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(15, 23, 42, 0.9);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            padding: 12px 0;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        }
+
+        .filter-bar {
+            display: flex;
+            gap: 10px;
+            max-width: var(--container-width);
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .filter-btn {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: var(--text-secondary);
+            padding: 6px 18px;
+            border-radius: 100px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .filter-btn:hover { background: rgba(255,255,255,0.1); }
+        
+        .filter-btn.active {
+            background: #fff;
+            color: #0f172a;
+            font-weight: 600;
+            border-color: #fff;
+            box-shadow: 0 0 15px rgba(255,255,255,0.3);
+        }
+
+        /* --- 时间轴布局 --- */
+        .timeline-container {
+            max-width: var(--container-width);
+            margin: 0 auto;
+            padding: 2rem 1rem;
+            position: relative;
+        }
+
+        /* 中轴线 */
+        .timeline-container::after {
+            content: '';
+            position: absolute;
+            width: 2px;
+            background: var(--timeline-line);
+            top: 0;
+            bottom: 0;
+            left: 50%;
+            margin-left: -1px;
+        }
+
+        .month-marker {
+            text-align: center;
+            margin: 4rem 0 2rem;
+            position: relative;
+            z-index: 5;
+        }
+        
+        .month-label {
+            background: var(--bg-color);
+            padding: 4px 16px;
+            border-radius: 20px;
+            border: 1px solid var(--text-secondary);
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            font-weight: bold;
+        }
+
+        .timeline-item {
+            padding: 10px 40px;
+            position: relative;
+            width: 50%;
+            box-sizing: border-box;
+            opacity: 0;
+            animation: fadeIn 0.6s ease-out forwards;
+        }
+
+        .timeline-item:nth-child(odd) { left: 0; text-align: right; }
+        .timeline-item:nth-child(even) { left: 50%; text-align: left; }
+
+        /* 连接点 */
+        .timeline-item::after {
+            content: '';
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: var(--bg-color);
+            border: 2px solid var(--text-secondary);
+            border-radius: 50%;
+            top: 28px;
+            z-index: 5;
+        }
+        .timeline-item:nth-child(odd)::after { right: -6px; }
+        .timeline-item:nth-child(even)::after { left: -6px; }
+
+        /* --- 卡片视觉样式优化 (多彩) --- */
+        .content-card {
+            padding: 1.5rem;
+            background: rgba(30, 41, 59, 0.4); /* 基础底色更透明 */
+            border-radius: 16px;
+            border: 1px solid rgba(255,255,255,0.05);
+            position: relative;
+            transition: transform 0.2s, box-shadow 0.2s;
+            overflow: hidden;
+        }
+
+        .content-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        /* 这里的CSS变量会在JS中动态赋值 */
+        .content-card.style-travel { --theme: var(--color-travel); }
+        .content-card.style-food { --theme: var(--color-food); }
+        .content-card.style-tech { --theme: var(--color-tech); }
+        .content-card.style-social { --theme: var(--color-social); }
+        .content-card.style-default { --theme: var(--color-default); }
+
+        /* 多彩边框与光晕 */
+        .content-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            border-radius: 16px;
+            padding: 1px; /* 边框宽度 */
+            background: linear-gradient(135deg, var(--theme), transparent 60%);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            opacity: 0.8;
+            pointer-events: none;
+        }
+
+        /* 内部微弱的背景光 */
+        .content-card::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at top left, var(--theme), transparent 70%);
+            opacity: 0.08;
+            pointer-events: none;
+        }
+
+        .date-badge {
+            display: inline-block;
+            font-family: monospace;
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--theme); /* 日期颜色跟随主题 */
+            margin-bottom: 0.5rem;
+            text-shadow: 0 0 10px rgba(0,0,0,0.5);
+        }
+
+        .card-text {
+            font-size: 1rem;
+            color: #e2e8f0;
+            margin-bottom: 0.8rem;
+            line-height: 1.6;
+        }
+
+        .tags { display: flex; flex-wrap: wrap; gap: 6px; }
+        .timeline-item:nth-child(odd) .tags { justify-content: flex-end; }
+        .timeline-item:nth-child(even) .tags { justify-content: flex-start; }
+
+        .tag {
+            font-size: 0.75rem;
+            padding: 2px 10px;
+            border-radius: 4px;
+            background: rgba(0,0,0,0.3);
+            color: var(--theme);
+            border: 1px solid rgba(255,255,255,0.1);
+            opacity: 0.9;
+        }
+
+        .footer { text-align: center; padding: 4rem 1rem; color: var(--text-secondary); font-size: 0.8rem; opacity: 0.5; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* --- 响应式适配 --- */
+        
+        /* 电脑/平板端：筛选栏居中 */
+        @media screen and (min-width: 769px) {
+            .filter-bar {
+                justify-content: center; /* 关键：居中 */
+                flex-wrap: wrap;
+            }
+        }
+
+        /* 手机端：单列 + 滑动筛选 */
+        @media screen and (max-width: 768px) {
+            .timeline-container::after { left: 20px; }
+            
+            .timeline-item {
+                width: 100%;
+                padding-left: 45px;
+                padding-right: 0;
+                text-align: left !important;
+            }
+            .timeline-item:nth-child(odd), .timeline-item:nth-child(even) { left: 0; }
+            .timeline-item:nth-child(odd)::after, .timeline-item:nth-child(even)::after { left: 15px; right: auto; }
+            
+            .timeline-item:nth-child(odd) .tags { justify-content: flex-start; }
+            
+            /* 手机端筛选栏：左对齐滑动 */
+            .filter-bar {
+                justify-content: flex-start;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                padding-bottom: 5px; /* 避免滚动条贴边 */
+            }
+            .filter-bar::-webkit-scrollbar { display: none; }
+            
+            h1 { font-size: 1.8rem; }
+            .stats-container { gap: 1.5rem; }
+            .stat-num { font-size: 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>📅 2025 LIFE LOG</h1>
+        <p class="subtitle">Reality, Wilderness & Digital Echoes</p>
+        
+        <div class="stats-container" id="statsContainer">
+            </div>
+    </header>
+
+    <div class="filter-wrapper">
+        <div class="filter-bar" id="filterBar">
+            <button class="filter-btn active" onclick="filterByTag('all', this)">All Moments</button>
+            </div>
+    </div>
+
+    <div class="timeline-container" id="timeline">
+        </div>
+
+    <div class="footer">
+        Generated by Gemini • 2025 Yearbook
+    </div>
+
+<script>
+    const rawData = [
+        { month: "Jan.", title: "启程与规划", events: [
+            { date: "1.4", content: "旧友年度日料聚餐与麻将竞技局 #社交 #美食 #娱乐" },
+            { date: "1.5", content: "福州捞化赏味与新年年度规划制定 #美食 #规划" },
+            { date: "1.11", content: "首次脑CT检查体验与耳石症治疗 #健康 #医疗" },
+            { date: "1.12", content: "上海西岸梦中心打卡 #CityWalk #艺术" },
+            { date: "1.18", content: "505餐厅西班牙红魔虾海鲜饭品鉴 #美食" },
+            { date: "1.30", content: "抵达新加坡：鱼尾狮公园、福康宁公园、来福士城游览，星耀樟宜觅食with Zoey #旅行 #CityWalk" },
+            { date: "1.31", content: "珀斯（Perth）首日探索：西澳博物馆Boola Bardip、西澳美术馆、Rib & Burgers餐厅赏味；游览伦敦街（London Court）、天鹅钟塔、伊丽莎白码头、国王公园；Blue Boat House打卡、夜景航拍与Oyster Bar生蚝品鉴 #旅行 #摄影 #美食 #文化" }
+        ]},
+        { month: "Feb.", title: "澳洲旷野与自然奇境", events: [
+            { date: "2.1", content: "罗特尼斯岛（Rottnest Island）一日游：果冻海航拍、短尾矮袋鼠（Quokka）喂食互动、海豹生态航拍、灯塔打卡；DOME餐厅户外Taco赏味 #旅行 #摄影 #自然 #美食" },
+            { date: "2.2", content: "西澳风情体验：探访澳洲农贸市场、玛格丽特河酒庄品酒、五味披萨鉴赏、薰衣草商店；体验巴塞尔顿栈桥与海中小火车；澳洲和牛赏味与惠灵顿公园夜间徒步 #旅行 #美食 #自然" },
+            { date: "2.3", content: "凯文森野生动物园深度游：考拉与蛇类接触体验、观摩剪羊毛与挤牛奶、袋熊观察与袋鼠喂食；珀斯铸币厂（Perth Mint）游览与黄金锻造工艺参观 #旅行 #自然 #文化" },
+            { date: "2.4", content: "印度洋自然奇观：兰斯林白沙丘、龙虾工厂参观、翡翠海、怪树（Leaning Tree）打卡；水晶球视角的印度洋日落延时摄影与星空摄影 #旅行 #摄影 #自然" },
+            { date: "2.5", content: "海洋与荒野：出海捕捞西澳岩龙虾、粉红湖（Hutt Lagoon）巡游、小十二门徒岩、卡尔巴里国家公园（自然之窗）徒步；杰拉尔顿沉船纪念碑瞻仰与龙虾BBQ晚宴 #旅行 #摄影 #美食 #自然" },
+            { date: "2.6", content: "朱利恩湾（Jurien Bay）与尖峰石阵（The Pinnacles）地质探索 #旅行 #自然" },
+            { date: "2.11", content: "利用 makebestmusic 工具进行音乐创作尝试 #科技 #创意" },
+            { date: "2.22", content: "珊姐接风宴：环球港潮汕牛肉火锅局 #社交 #美食" },
+            { date: "2.27", content: "Deepseek AI 对生活影响主题座谈会 #科技 #社交" },
+            { date: "2.28", content: "“孤独”与“陪伴”主题茶话会 #社交 #人文" }
+        ]},
+        { month: "Mar.", title: "北非远征与艺术漫步", events: [
+            { date: "3.1", content: "湖州原乡小镇赏梅与漂流体验；游览湖州小西街并品尝浙北菜 #旅行 #美食 #自然" },
+            { date: "3.2", content: "听鲁豫播客《每个人参与世界的方式不一样》座谈分享；首次西塔老太太烤肉赏味 #文化 #美食" },
+            { date: "3.5", content: "国家会展中心：华食展与华机展行业调研 #行业 #展会" },
+            { date: "3.8", content: "淮海中路城市漫步与日式立食荞麦面体验 #CityWalk #美食" },
+            { date: "3.14", content: "抵达香港：汇丰银行与众安银行开户办理；中环区域漫步与购物 #旅行 #金融 #购物" },
+            { date: "3.15", content: "香港行程：中银香港开户；旺角汤咖喱赏味；USDT线下交易所兑换体验；M+视觉文化博物馆参观；尖沙咀日料晚餐 #旅行 #金融 #艺术 #美食" },
+            { date: "3.17", content: "“YOU趣”双鱼座主题生日派对 #社交 #庆典" },
+            { date: "3.18", content: "医疗体验：狂犬疫苗与破伤风针剂接种 #健康 #医疗" },
+            { date: "3.21", content: "巴林机场贵宾厅中转体验 #旅行" },
+            { date: "3.22", content: "抵达卡萨布兰卡：参观哈桑二世清真寺；拉巴特大西洋海景海鲜餐厅用餐；游览皇宫、哈桑塔、穆罕穆德五世王陵与乌达雅堡 #旅行 #文化 #美食" },
+            { date: "3.23", content: "舍夫沙万（蓝城）巡游与摩洛哥塔吉锅（Tagine）风味尝试 #旅行 #美食" },
+            { date: "3.24", content: "菲斯古城探访与传统皮革厂工艺游览 #旅行 #文化" },
+            { date: "3.25", content: "依芙兰小镇游览；梅祖卡撒哈拉沙漠骆驼骑行与日落观赏 #旅行 #自然" },
+            { date: "3.26", content: "撒哈拉沙漠日出追踪摄影与托得拉峡谷探访 #旅行 #摄影 #自然" },
+            { date: "3.27", content: "摩洛哥人文之旅：阿伊特本哈杜村、巴希亚宫、库图比亚清真寺；德吉玛广场（不眠广场）夜游与摄影；非洲麦当劳首尝 #旅行 #文化 #摄影 #美食" },
+            { date: "3.28", content: "马拉喀什：YSL花园（Jardin Majorelle）、摩洛哥Mall与迈阿密海滨大道游览 #旅行 #时尚 #购物" },
+            { date: "3.30", content: "天安千树柴门聚餐 #社交 #美食" }
+        ]},
+        { month: "Apr.", title: "职业重启与春日生活", events: [
+            { date: "4.1", content: "虹口足球场樱花观赏 #自然 #摄影" },
+            { date: "4.2", content: "财富流沙盘推演与“上海生存技巧”分享会 #社交 #学习" },
+            { date: "4.5", content: "铁冲红杜鹃花期观赏 #自然 #旅行" },
+            { date: "4.8", content: "武宁公园春日漫步 #休闲" },
+            { date: "4.10", content: "职业生涯新篇章：职场二进宫 #职场" },
+            { date: "4.12", content: "Garlic BBQ 蒜味烧烤与老哥传统麻将局 #美食 #娱乐" },
+            { date: "4.13", content: "金猪韩国烤肉赏味与世博公园散步 #美食 #休闲" },
+            { date: "4.19", content: "信条书店：“关于松弛感”主题茶话会 #社交 #文化" },
+            { date: "4.20", content: "嘉定深度游：紫藤园、汇龙潭公园、州桥老街、嘉定博物馆；前滩上海花展与太古里闲逛 #旅行 #文化 #自然" },
+            { date: "4.22", content: "大牛寿喜烧品鉴 #美食" },
+            { date: "4.24", content: "Bloomarket探店：蟹肉海胆biangbiang面与羊肉烧麦 #美食" },
+            { date: "4.25", content: "商业洞察：与罗森便利店店员对谈流量与经营成本分析 #商业 #社交" }
+        ]},
+        { month: "May", title: "巴蜀漫游与城市微光", events: [
+            { date: "5.1", content: "长宁梧桐区春日 CityWalk #CityWalk #社交" },
+            { date: "5.2", content: "抵达成都与摄影采风：意大利文化馆、像素太产业园、麓湖CP、EOD时光隧道、西博城“八爪鱼”地铁E口、双子塔、SKP；转转会川菜品鉴 #旅行 #摄影 #美食" },
+            { date: "5.3", content: "都江堰水利工程游览 #旅行 #文化" },
+            { date: "5.4", content: "成都人文：太古里街拍、老城区 City Walk、九眼桥酒吧街夜游 #旅行 #摄影 #社交" },
+            { date: "5.5", content: "四川科技馆参观、成都SPA体验与万象城购物 #旅行 #休闲 #购物" },
+            { date: "5.10-5.11", content: "重度体力活——搬家 #生活" },
+            { date: "5.17", content: "杏梅尖户外徒步 #户外 #运动" },
+            { date: "5.18", content: "陆家嘴滨江散步与萨莉亚新品评测 #休闲 #美食" },
+            { date: "5.22", content: "前滩太古里与田子坊散步 #CityWalk" },
+            { date: "5.24", content: "浦东滨江骑行运动 #运动" },
+            { date: "5.25", content: "“人生不设限”主题茶话会、汤咖喱赏味与美罗城购物 #社交 #美食 #购物" },
+            { date: "5.31", content: "南昌滕王阁登楼夜览 #旅行 #文化" }
+        ]},
+        { month: "Jun.", title: "婚礼季与内省时刻", events: [
+            { date: "6.1", content: "John婚礼出席，USC老友重聚；海昏侯国遗址博物馆参观；洪都大拇指、尊品牛排与辣小鲜赣菜体验 #社交 #旅行 #文化 #美食" },
+            { date: "6.2", content: "江西省博物馆参观 #旅行 #文化" },
+            { date: "6.3", content: "重返成都：红星路与春熙路散步 #旅行 #CityWalk" },
+            { date: "6.5", content: "居家摄影创作：铁轨夜景主题 #摄影" },
+            { date: "6.6", content: "茶话会：“自省与内耗”辨析 #社交 #心理" },
+            { date: "6.9", content: "渔渥寿司 Omakase  #美食" },
+            { date: "6.14", content: "合肥万象汇市场格局调研 #商业 #出差" },
+            { date: "6.15", content: "Susie婚礼出席 #社交" },
+            { date: "6.16", content: "原法租界区域夜间骑行 #运动 #CityWalk" },
+            { date: "6.21", content: "厨艺与游戏：手作百香果酸汤牛肉、海龟汤（情境推理游戏）初体验 #烹饪 #社交 #游戏" },
+            { date: "6.22", content: "龙猫咖啡馆雨天闲聊局 #社交 #休闲" },
+            { date: "6.26", content: "深夜食堂独酌体验；Blueglass酸奶（“肠胃爆炸”）体验 #美食 #生活" },
+            { date: "6.27", content: "MBTI人格与职业关联性探索茶话会 #社交 #心理 #职场" },
+            { date: "6.28", content: "Homebar体验与摄影；性格色彩卡牌体验；Maki House 日料赏味 #社交 #摄影 #美食" },
+            { date: "6.29", content: "海龟汤推理游戏局 #社交 #游戏" },
+            { date: "6.30", content: "西岸火烧云气象摄影（未果） #摄影" }
+        ]},
+        { month: "Jul.", title: "艺术重塑与科技调研", events: [
+            { date: "7.1", content: "小米AI眼镜产品试用与反思 #科技 #评测" },
+            { date: "7.5", content: "MBTI与职业探讨（第二期）；西岸美术馆《重塑景观》Part 1、《建造上海》展览；金匠寿司赏味 #社交 #艺术 #美食" },
+            { date: "7.6", content: "西岸美术馆《重塑景观》Part 2、David Hockney《BIGGER & CLOSER》光影展；西岸日落航拍 #艺术 #摄影" },
+            { date: "7.7", content: "穹顶艺术中心：梵克雅宝《时间的诗篇》高级制表展 #艺术 #时尚" },
+            { date: "7.11", content: "Momo Cafe (by Le Que 餐饮集团) 体验；夏夜骑行；路易威登“路易号”打卡 #美食 #运动 #时尚" },
+            { date: "7.12", content: "“多巴胺”主题活动与珍宝海鲜赏味 #社交 #美食" },
+            { date: "7.13", content: "反算法干预主题茶话会；太阳宫购物与美食 #社交 #科技 #休闲" },
+            { date: "7.16", content: "英国签证中心递签打卡 #旅行 #行政" },
+            { date: "7.19", content: "来福士医院年度体检 #健康" },
+            { date: "7.20", content: "培育钻石市场调研；小陆的“周日厨房”私厨体验 #商业 #美食" },
+            { date: "7.26", content: "公益与情感问题深度探讨局 #社交 #公益" },
+            { date: "7.28", content: "OH卡性格测试评估；分水关潮汕牛肉火锅；新款蔚来ET5与理想i8车型调研 #心理 #美食 #科技 #汽车" },
+            { date: "7.29", content: "腾讯上海滨江展厅参观 #科技 #行业" }
+        ]},
+        { month: "Aug.", title: "极限挑战与钻石行情", events: [
+            { date: "8.2", content: "放纵餐：沙蒜豆面；M50创意园与天安千树闲逛 #美食 #艺术 #CityWalk" },
+            { date: "8.6", content: "久违全段徐汇滨江夏夜散步 #休闲" },
+            { date: "8.8", content: "ULU ULU 白松露 Gelato 品鉴；淮海路 City Walk；GPT-5 Agent 能力调研 #美食 #CityWalk #科技" },
+            { date: "8.9", content: "职业体验：饿了么骑手一日体验 #生活体验" },
+            { date: "8.10", content: "《阿瓦隆》与德州扑克桌游局；顺德鱼生赏味 #社交 #游戏 #美食" },
+            { date: "8.15", content: "“如何把话说到别人心里去”沟通技巧探讨 #社交 #沟通" },
+            { date: "8.16", content: "若凡日式烧肉赏味 #美食" },
+            { date: "8.23", content: "鮨政 Omakase 体验；钻石行情深度调研与水贝市场选购 #美食 #商业" },
+            { date: "8.24", content: "Azul 拉丁餐厅用餐；财富流沙盘（爱情版）推演 #美食 #社交 #游戏" },
+            { date: "8.29", content: "50KM 极限骑行拉练 #运动 #挑战" },
+            { date: "8.30", content: "“Las Vegas 之夜”社交活动主题摄影创作 #摄影" },
+            { date: "8.31", content: "迪桑特（Descente）品牌展与iapm闲逛 #时尚 #展览" }
+        ]},
+        { month: "Sep.", title: "智能体分析与英伦预热", events: [
+            { date: "9.1", content: "基于 Codebuddy 编程智能体的消费习惯数据分析与可视化项目 #科技 #数据" },
+            { date: "9.12", content: "“啥也不是”无实物喜剧观演；岩姐烧烤夜宵 #娱乐 #美食" },
+            { date: "9.13", content: "老哥家庭掼蛋局；台湾菜品鉴 #社交 #美食" },
+            { date: "9.15", content: "鑫耀光环黑金建筑摄影 #摄影" },
+            { date: "9.20", content: "浦江会江明月餐厅赏味 #美食" },
+            { date: "9.21", content: "湘粤王府宴会赏味 #美食" },
+            { date: "9.25", content: "财富困顿与破局主题座谈会 #金融 #社交" },
+            { date: "9.26", content: "上海第二届光影节体验；路特斯（Lotus）跑车模拟驾驶体验 #艺术 #汽车" },
+            { date: "9.27", content: "半日桌游局；新天地闲逛；iPhone 17 与 AirPods Pro 3 新品体验；尚新牛赏味 #社交 #科技 #美食" }
+        ]},
+        { month: "Oct.", title: "深度英伦与极光奇遇", events: [
+            { date: "10.2", content: "剑桥大学城深度游与牧羊人派（Shepherd's Pie）品尝 #旅行 #美食" },
+            { date: "10.3", content: "约克郡：肉铺街（The Shambles）游览、约克小鬼店探店、黄油啤酒体验、约克大教堂参观与牛排晚餐 #旅行 #文化 #美食" },
+            { date: "10.4", content: "约克航拍；苏格兰国家博物馆、皇家英里（Royal Mile）、维多利亚街道、爱丁堡城堡游览；米其林五道式法餐体验 #旅行 #摄影 #文化 #美食" },
+            { date: "10.5", content: "苏格兰菜品鉴；王子街花园、苏格兰国立美术馆、斯科特纪念碑与卡尔顿山游览 #旅行 #艺术 #美食" },
+            { date: "10.6", content: "苏格兰肖像博物馆；海德公园黄昏景致；Nicole家中秋聚餐 #旅行 #艺术 #社交" },
+            { date: "10.7", content: "伦敦探索：大英博物馆、Lobster & Burger 餐厅、伦敦中国城、考文特花园；威斯敏斯特大教堂夜景拍摄 #旅行 #文化 #美食 #摄影" },
+            { date: "10.8", content: "伦敦骑行之旅：唐宁街10号、白金汉宫、帝国理工学院、科学博物馆、自然历史博物馆、V&A博物馆、泰特不列颠美术馆、军情六处外观；泰晤士河延时摄影与伦敦眼夜拍；The Red Lion 餐厅炸鱼薯条与苏格兰蛋品尝 #旅行 #运动 #文化 #摄影 #美食" },
+            { date: "10.9", content: "伦敦经典地标：特拉法加广场、英式早餐、国家美术馆、圣詹姆斯公园、皇家卫队换岗仪式、牛津街；伦敦桥与伦敦塔桥漫步；金融城夜景摄影；西班牙酒馆小酌 #旅行 #艺术 #摄影 #美食" },
+            { date: "10.10", content: "泰特现代美术馆；博罗市场（Borough Market）海鲜饭、吉拉多生蚝与手撕猪肉三明治；抵达都柏林品尝爱尔兰菜；都柏林酒吧街（Pub Street）夜游 #旅行 #艺术 #美食" },
+            { date: "10.11", content: "都柏林 City Walk：都柏林尖塔、半便士桥、爱尔兰经典菜式（牧羊人派、海鲜巧达汤、熟成牛排）品鉴、圣三一学院、威士忌博物馆、王尔德故居、爱尔兰国立美术馆、圣史蒂芬绿地、格拉夫顿街；爱尔兰海鲜晚餐 #旅行 #文化 #美食" },
+            { date: "10.12", content: "航班极光观赏体验 #旅行 #自然" },
+            { date: "10.18", content: "影视马拉松：八倍速一日刷完《大明风华》62集 #娱乐" },
+            { date: "10.19", content: "抖音上海总部调研；共青森林公园散步；五角场北京菜品鉴 #商业 #自然 #美食" },
+            { date: "10.24", content: "新天地酒局派对 #社交" },
+            { date: "10.25", content: "萧山徒步与麦田摄影 #户外 #摄影" },
+            { date: "10.26", content: "iPhone Air 新品体验；静安寺、南京西路、新天地 City Walk；观看刘润年度演讲《大迁徙》 #科技 #CityWalk #学习" },
+            { date: "10.28", content: "篁岭晒秋民俗摄影与弦高古城暴走 #旅行 #摄影" },
+            { date: "10.29", content: "景德镇博物馆导览；小黄鱼赏味与手工制陶体验 #旅行 #文化 #艺术 #美食" }
+        ]},
+        { month: "Nov.", title: "深秋漫步与AI探索", events: [
+            { date: "11.2", content: "蟹家大院“蟹黄金”赏味；昌平路 City Walk #美食 #CityWalk" },
+            { date: "11.8", content: "金茂大厦九重天餐厅赏味；手作秃黄油拌饭 #美食" },
+            { date: "11.9", content: "《人生当铺》体验活动；环球港购物与美食 #社交 #购物" },
+            { date: "11.14", content: "读书会：“时间与金钱”主题探讨；家康居酒屋夜酌 #学习 #社交" },
+            { date: "11.15", content: "四明山秋季徒步；张记一哥烧烤“深夜食堂” #户外 #美食" },
+            { date: "11.16", content: "“黑灯瞎会”黑暗社交游戏体验 #社交 #游戏" },
+            { date: "11.22", content: "召开“东安路三大”并确立常委名单和四大会期；五里关火锅赏味 #社交 #美食" },
+            { date: "11.23", content: "上海植物园散步；西岸粉色圣诞树初打卡；某不知名台湾菜品鉴 #自然 #休闲 #美食" },
+            { date: "11.27", content: "Gemini 3 + NotebookLM 联合深度体验评测 #科技" },
+            { date: "11.28", content: "龙华寺银杏夜景摄影 #摄影" },
+            { date: "11.29", content: "无锡短途游：运河公园秋日散步、毋米粥（粥底火锅）赏味、南长街古韵逛吃之旅 #旅行 #美食 #CityWalk" },
+            { date: "11.30", content: "Emily婚宴出席；太湖鼋头渚赏秋；特色汤咖喱赏味 #社交 #旅行 #自然 #美食" }
+        ]},
+        { month: "Dec.", title: "岁末盛宴与理性反思", events: [
+            { date: "12.3", content: "甬府（北外滩店）宁波菜赏味&外滩夜景观赏 #美食" },
+            { date: "12.5", content: "徐家汇《阿瓦隆》桌游竞技局 #社交 #游戏" },
+            { date: "12.6", content: "上海汉堡节首刷：堡治培根牛肉堡与小羊墨鱼汉堡品鉴；虹口足球场财富流沙盘推演 #美食 #社交 #游戏" },
+            { date: "12.7", content: "上海汉堡节二刷：3Q鹅肝堡与云堡芝士汉堡品鉴；小花老师家宅掼蛋局 #美食 #社交 #游戏" },
+            { date: "12.12", content: "南京东路“盲盒饭局”铁板烧体验；华为“日照金山”路由器产品体验 #美食 #社交 #科技" },
+            { date: "12.13", content: "陆家嘴光音广场露天桌游聚会 #社交 #游戏" },
+            { date: "12.18", content: "支付产品与金融市场反思：由 PayPal 账号找回与认证流程引发的中美支付产品差异化思考；承受纳斯达克与工业富联“圣诞绿色行情”的暴击洗礼 #金融 #科技 #思考" },
+            { date: "12.21", content: "艺术熏陶：2025“爱的致意”圣诞主题音乐会观演 #艺术 #音乐" },
+            { date: "12.22", content: "北外滩圣诞派对活动纪实摄影 #摄影 #社交 #节日" }
+        ]}
+    ];
+
+    function extractTags(text) {
+        const regex = /#[\w\u4e00-\u9fa5]+/g;
+        return text.match(regex) || [];
+    }
+
+    // ★★★ 核心逻辑：根据Tag返回样式类名 ★★★
+    function getCardStyle(tags) {
+        const tagString = tags.join(' ');
+        if (tagString.includes('旅行') || tagString.includes('CityWalk')) return 'style-travel';
+        if (tagString.includes('美食')) return 'style-food';
+        if (tagString.includes('科技') || tagString.includes('数码')) return 'style-tech';
+        if (tagString.includes('社交') || tagString.includes('游戏')) return 'style-social';
+        return 'style-default';
+    }
+
+    function initStats() {
+        let totalEvents = 0;
+        let tagCounts = {};
+        
+        rawData.forEach(month => {
+            totalEvents += month.events.length;
+            month.events.forEach(evt => {
+                const tags = extractTags(evt.content);
+                tags.forEach(tag => {
+                    tagCounts[tag] = (tagCounts[tag] || 0) + 1;
+                });
+            });
+        });
+
+        const sortedTags = Object.entries(tagCounts).sort((a, b) => b[1] - a[1]);
+        
+        const statsHTML = `
+            <div class="stat-item">
+                <div class="stat-num">${totalEvents}</div>
+                <div class="stat-label">Moments</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-num">${Object.keys(tagCounts).length}</div>
+                <div class="stat-label">Interests</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-num" style="color:var(--color-travel)">${tagCounts['#旅行'] || 0}</div>
+                <div class="stat-label">Trips</div>
+            </div>
+        `;
+        document.getElementById('statsContainer').innerHTML = statsHTML;
+
+        // 过滤器
+        const filterBar = document.getElementById('filterBar');
+        sortedTags.slice(0, 8).forEach(([tag, count]) => {
+            const btn = document.createElement('button');
+            btn.className = 'filter-btn';
+            btn.textContent = tag;
+            btn.onclick = function() { filterByTag(tag, this); };
+            filterBar.appendChild(btn);
+        });
+    }
+
+    function renderTimeline(filterTag = 'all') {
+        const container = document.getElementById('timeline');
+        container.innerHTML = '';
+
+        rawData.forEach(monthData => {
+            const filteredEvents = monthData.events.filter(evt => {
+                if (filterTag === 'all') return true;
+                return evt.content.includes(filterTag);
+            });
+
+            if (filteredEvents.length === 0) return;
+
+            const monthDiv = document.createElement('div');
+            monthDiv.className = 'month-marker';
+            monthDiv.innerHTML = `<span class="month-label">${monthData.month}</span>`;
+            container.appendChild(monthDiv);
+
+            filteredEvents.forEach(evt => {
+                const item = document.createElement('div');
+                item.className = 'timeline-item';
+                
+                let formattedContent = evt.content.replace(/#[\w\u4e00-\u9fa5]+/g, '');
+                const tags = extractTags(evt.content);
+                
+                // 获取样式类
+                const styleClass = getCardStyle(tags);
+                const tagHTML = tags.map(t => `<span class="tag">${t}</span>`).join('');
+
+                item.innerHTML = `
+                    <div class="content-card ${styleClass}">
+                        <div class="date-badge">${evt.date}</div>
+                        <div class="card-text">${formattedContent}</div>
+                        <div class="tags">${tagHTML}</div>
+                    </div>
+                `;
+                container.appendChild(item);
+            });
+        });
+    }
+
+    function filterByTag(tag, btnElement) {
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        if(btnElement) btnElement.classList.add('active');
+        renderTimeline(tag);
+    }
+
+    initStats();
+    renderTimeline();
+
+</script>
+</body>
+</html>
